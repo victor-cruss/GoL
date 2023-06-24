@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cellular Automaton - Game of Life</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // Canvas and context variables
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize the canvas to fill the screen
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Grid size
+        const gridSize = 20;
+        const rows = Math.floor(canvas.height / gridSize);
+        const cols = Math.floor(canvas.width / gridSize);
+
+        // Create an empty grid
+        let grid = createEmptyGrid();
+
+        // Initialize the grid
+        initializeGrid();
+
+        // Request animation frame
+        requestAnimationFrame(draw);
+
+        // Create an empty grid
+        function createEmptyGrid() {
+            return Array.from({ length: rows }, () => Array.from({ length: cols }, () => 0));
+        }
+
+        // Initialize the grid
+        function initializeGrid() {
+            // Initialize the grid randomly
+            grid = grid.map(row => row.map(() => Math.random() > 0.5 ? 1 : 0));
+        }
+
+        // Update the grid state
+        function updateGrid() {
+            const newGrid = createEmptyGrid();
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = grid[i][j];
+                    const neighbors = countNeighbors(i, j);
+
+                    if (cell === 1) {
+                        if (neighbors < 2 || neighbors > 3) {
+                            newGrid[i][j] = 0; // Cell dies
+                        } else {
+                            newGrid[i][j] = 1; // Cell survives
+                        }
+                    } else {
+                        if (neighbors === 3) {
+                            newGrid[i][j] = 1; // Cell is born
+                        } else {
+                            newGrid[i][j] = 0; // Cell remains empty
+                        }
+                    }
+                }
+            }
+
+            grid = newGrid;
+        }
+
+        // Count the number of live neighbors for a cell
+        function countNeighbors(row, col) {
+            let count = 0;
+
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const nRow = (row + i + rows) % rows;
+                    const nCol = (col + j + cols) % cols;
+
+                    count += grid[nRow][nCol];
+                }
+            }
+
+            count -= grid[row][col]; // Exclude the current cell
+            return count;
+        }
+
+        // Draw the grid on the canvas
+        function draw() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the grid cells
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = grid[i][j];
+                    const x = j * gridSize;
+                    const y = i * gridSize;
+
+                    if (cell === 1) {
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(x, y, gridSize, gridSize);
+                    }
+                }
+            }
+
+            // Update the grid
+            updateGrid();
+
+            // Check if the pattern has stabilized
+            if (isPatternStable()) {
+                drawText();
+            } else {
+                requestAnimationFrame(draw);
+            }
+        }
+
+        // Check if the pattern has stabilized (all remaining cells form the desired pattern)
+        function isPatternStable() {
+            // Convert the remaining cells to a string representation
+            const remainingCells = grid.flat().join('');
+
+            // Check if the remaining cells spell "coming soon"
+            return remainingCells === "0110110010111100010101110110010111010100";
+        }
+
+        // Draw the text "Coming Soon"
+        function drawText() {
+            const text = "Coming Soon";
+            const fontSize = Math.min(canvas.width, canvas.height) / 10;
+            ctx.font = `${fontSize}px Arial`;
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        }
+    </script>
+</body>
+</html>
